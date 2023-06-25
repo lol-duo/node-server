@@ -5,7 +5,7 @@ class Service {
     constructor() {
         //set headers
         this.headers = {
-            "X-Riot-Token": "RGAPI-565f9c69-9a86-4dbf-bfd9-cdcf628b60f7"
+            "X-Riot-Token": ""
         }
 
         //set timer
