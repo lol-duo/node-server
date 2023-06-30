@@ -2,19 +2,21 @@
   "name": "lolduo-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node src/index.js",
+    "dev": "MODE=dev nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@slack/web-api": "^6.8.1",
+    "async-mutex": "^0.4.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "node-fetch": "^3.3.1",
-    "async-mutex": "^0.4.0"
+    "node-fetch": "^3.3.1"
   },
   "devDependencies": {
     "nodemon": "^1.17.3"

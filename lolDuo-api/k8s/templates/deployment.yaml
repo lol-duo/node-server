@@ -1,0 +1,39 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Values.deployment.namespace }}
+  labels:
+    deployment: {{ .Values.deployment.name }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      server: {{ .Values.deployment.name }}
+  template:
+    metadata:
+      labels:
+        server: {{ .Values.deployment.name }}
+    spec:
+      containers:
+        - name: lolDuo-api-container
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: Slack_Channel
+              value : riot-api-server
+            - name: PORT
+              value: 80
+            - name: Slack_Bot_Token
+              valueFrom:
+                secretKeyRef:
+                  name: lol-duo-api-secret
+                  key: Slack_Bot_Token
+            - name: Riot_API_Key
+              valueFrom:
+                secretKeyRef:
+                  name: lol-duo-api-secret
+                  key: Riot_API_Key

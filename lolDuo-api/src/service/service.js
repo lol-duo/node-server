@@ -1,15 +1,17 @@
 import fetch from 'node-fetch';
 import { Mutex } from 'async-mutex';
+import SlackService from "./slack.js";
 
 class Service {
     constructor() {
         //set headers
         this.headers = {
-            "X-Riot-Token": ""
+            "X-Riot-Token": process.env.Riot_API_Key
         }
 
         //set timer
         this.timer = 0;
+        this.waitTime = Number(process.env.WAIT_TIME) || 200;
 
         //set mutex
         this.mutex = new Mutex();
@@ -24,13 +26,28 @@ class Service {
         const now = Date.now();
 
         //wait if necessary
-        if (now - timer < 200) await new Promise(resolve => setTimeout(resolve, 200 - (now - timer)));
+        if (now - timer < this.waitTime) await new Promise(resolve => setTimeout(resolve, this.waitTime - (now - timer)));
+
         try {
             //get response
             const response = await fetch(url, {
                 method: 'GET',
                 headers: this.headers
             })
+
+            //check response
+            if (!response.ok) {
+                console.log(response)
+                //send Slack message
+                SlackService.getInstance().sendMessage(process.env.Slack_Channel,
+                    `lol-duo-api Service/getResponse Riot 응답 오류 발생 : 
+                    url : ${url}
+                    status : ${response.status} 
+                    statusText : ${response.statusText}
+                    riot api key : ${process.env.Riot_API_Key}`);
+                return null;
+            }
+
             const json = await response.json();
 
             //update timer
@@ -39,7 +56,8 @@ class Service {
             //return json
             return json;
         } catch (err) {
-            return err;
+            SlackService.getInstance().sendMessage(process.env.Slack_Channel, `lol-duo-api Service/getResponse error 발생 : ${err}`);
+            return null;
         } finally {
             //release mutex
             mutex();
