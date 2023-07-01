@@ -1,6 +1,6 @@
 # values.yaml
 image:
-  repository: 431955170593.dkr.ecr.ap-northeast-2.amazonaws.com/iterview
+  repository: 431955170593.dkr.ecr.ap-northeast-2.amazonaws.com/lol-duo
   tag: latest
   pullPolicy: Always
 
