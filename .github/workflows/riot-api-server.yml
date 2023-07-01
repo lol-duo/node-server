@@ -40,11 +40,15 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA
 
+      - name: Print current directory
+        run: |
+          pwd
+
       - name: Update tag in values.yaml
         env:
           NEW_TAG: $GITHUB_SHA
         run: |
-          sed -i '' "s%tag: .*%tag: $NEW_TAG%" ./lolDuo-api/k8s/values.yaml
+          sed -i "s%tag: .*%tag: $NEW_TAG%" ./lolDuo-api/k8s/values.yaml
 
       - name: Commit changes to values.yaml
         run: |
