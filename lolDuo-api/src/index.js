@@ -23,4 +23,8 @@ app.get('/health', (req, res) => {
 
 app.listen(process.env.PORT, () => {
     console.log(`lol-duo api server is running on port ${process.env.PORT}`);
+    console.log(`riot api key : ${process.env.Riot_API_Key}`);
+    console.log(`slack token : ${process.env.Slack_Bot_Token}`);
+    console.log(`slack channel : ${process.env.Slack_Channel}`);
+    console.log(`wait time : ${process.env.WAIT_TIME}`);
 });
