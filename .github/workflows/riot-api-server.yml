@@ -44,7 +44,7 @@ jobs:
         env:
           NEW_TAG: $GITHUB_SHA
         run: |
-          sed -i '' "s%tag: .*%tag: $NEW_TAG%" lolDuo-api/k8s/values.yaml
+          sed -i '' "s%tag: .*%tag: $NEW_TAG%" ./lolDuo-api/k8s/values.yaml
 
       - name: Commit changes to values.yaml
         run: |
