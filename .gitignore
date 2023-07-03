@@ -1,3 +1,4 @@
 /lolDuo-api/node_modules/
 .idea
 /lolDuo-api/secret/
+/CronJob/node_modules
