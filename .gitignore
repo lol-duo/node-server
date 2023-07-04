@@ -2,3 +2,5 @@
 .idea
 /lolDuo-api/secret/
 /CronJob/node_modules
+/CronJob/secret
+```
