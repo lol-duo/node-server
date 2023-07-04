@@ -33,7 +33,6 @@ try {
     mongoose.connect(process.env.mongoDB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        useCreateIndex: true,
         dbName: "riot"
     })
         .then(() => console.log("mongoDB connected"))
