@@ -37,7 +37,7 @@ class Service {
 
             //check response
             if (!response.ok) {
-                console.log(response)
+                console.log(JSON.stringify(response))
                 //send Slack message
                 SlackService.getInstance().sendMessage(process.env.Slack_Channel,
                     `lol-duo-api Service/getResponse Riot 응답 오류 발생 : 
