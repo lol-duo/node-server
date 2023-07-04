@@ -14,6 +14,3 @@ COPY ./src ./src
 
 # Expose port 3000
 EXPOSE 80
-
-# Start the application
-CMD [ "npm", "run", "prod" ]
