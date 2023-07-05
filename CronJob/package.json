@@ -8,6 +8,8 @@
     "prodSettingUserInfo": "MODE=prod node src/SettingUserInfo/input_sqs.js",
     "devSettingUserInfo_CallApi": "MODE=dev nodemon src/SettingUserInfo/call_riot_api.js",
     "prodSettingUserInfo_CallApi": "MODE=prod node src/SettingUserInfo/call_riot_api.js",
+    "devGetServerInfo": "MODE=dev nodemon src/ServerInfo/getServerInfo.js",
+    "prodGetServerInfo": "MODE=prod node src/ServerInfo/getServerInfo.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
