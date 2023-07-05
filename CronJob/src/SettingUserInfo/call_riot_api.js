@@ -197,3 +197,9 @@ if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
     await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
 }
+
+//connection close
+await mongoose.disconnect();
+
+//finish process
+process.exit(0);
