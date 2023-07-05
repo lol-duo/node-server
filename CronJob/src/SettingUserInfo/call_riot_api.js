@@ -61,7 +61,7 @@ let sqsURL = await awsSQSController.get_SQS_URL(process.env.SQS_NAME);
 
 while (true){
     // get SQS message
-    let message = await awsSQSController.getSQSMessage(sqsURL, 600, 20, 1);
+    let message = await awsSQSController.getSQSMessage(sqsURL, 3600, 20, 1);
     if(message === null) break;
 
     // parse message
