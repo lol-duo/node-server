@@ -30,7 +30,11 @@ if(process.env.MODE === "prod"){
 
 // set mongoose
 try {
-    mongoose.connect(process.env.mongoDB_URI)
+    mongoose.connect(process.env.mongoDB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: "riot"
+    })
         .then(() => console.log("mongoDB connected"))
         .catch(
             async (err) => {
@@ -57,7 +61,7 @@ let sqsURL = await awsSQSController.get_SQS_URL(process.env.SQS_NAME);
 
 while (true){
     // get SQS message
-    let message = await awsSQSController.getSQSMessage(sqsURL, 60, 20, 1);
+    let message = await awsSQSController.getSQSMessage(sqsURL, 600, 20, 1);
     if(message === null) break;
 
     // parse message
@@ -78,6 +82,7 @@ while (true){
     else if(tier === "MASTER") url = `${process.env.RIOT_SERVICE_URL}/masterLeague`;
     else url = `${process.env.RIOT_SERVICE_URL}/league/${tier}/${division}/${page}`;
 
+    console.log(`tier : ${tier}, division : ${division}, page : ${page}, url: ${url}`);
     // get league
     let request = await fetch(url);
 
@@ -97,6 +102,9 @@ while (true){
 
     // save user info
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
+        console.log(`start save ${tier}`)
+        let startTimestamp = Date.now();
+        let topSaveTime = 0, lowSaveTime = 0;
         // set leagueInfo
         for(let entry of leagueInfo.entries) {
             let newUserInfo = {
@@ -114,10 +122,21 @@ while (true){
                 leagueId: leagueInfo.leagueId,
                 queueType: leagueInfo.queue
             };
+
+            let timestamp = Date.now();
+
             // save user info
             let user = new userModel(newUserInfo);
             await user.save();
+
+            // calculate save time
+            let saveTime = Date.now() - timestamp;
+
+            // calculate top,low save time
+            topSaveTime = topSaveTime > saveTime ? topSaveTime : saveTime;
+            lowSaveTime = lowSaveTime < saveTime ? lowSaveTime : saveTime;
         }
+        console.log(`finish save ${tier}, time: ${Date.now() - startTimestamp}ms, topSaveTime: ${topSaveTime}ms, lowSaveTime: ${lowSaveTime}ms, averageSaveTime: ${(Date.now() - startTimestamp) / leagueInfo.entries.length}ms`);
     }
     else{
         // if leagueInfo is not empty add next page
@@ -132,6 +151,11 @@ while (true){
             };
             await awsSQSController.sendSQSMessage(sqsURL, newMessage);
         }
+
+        console.log(`start save tier : ${tier}, division : ${division}, page : ${page}`)
+        let startTimestamp = Date.now();
+        let topSaveTime = 0, lowSaveTime = 0;
+
         for (let entry of leagueInfo) {
             let newUserInfo = {
                 summonerId: entry.summonerId,
@@ -149,10 +173,18 @@ while (true){
                 queueType: entry.queueType
             };
 
+            let timestamp = Date.now();
+
             // save user info
             let user = new userModel(newUserInfo);
             await user.save();
+
+            // calculate save time
+            let saveTime = Date.now() - timestamp;
+            topSaveTime = topSaveTime > saveTime ? topSaveTime : saveTime;
+            lowSaveTime = lowSaveTime < saveTime ? lowSaveTime : saveTime;
         }
+        console.log(`finish save tier : ${tier}, division : ${division}, page : ${page}, time: ${Date.now() - startTimestamp}ms, topSaveTime: ${topSaveTime}ms, lowSaveTime: ${lowSaveTime}ms, averageSaveTime: ${(Date.now() - startTimestamp) / leagueInfo.length}ms`);
     }
 
     console.log(`SettingUserInfo CronJob finished: ${tier} ${division} ${page}`)
