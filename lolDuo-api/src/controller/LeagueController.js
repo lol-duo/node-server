@@ -5,7 +5,7 @@ class LeagueController {
     constructor() {
 
         let router = express.Router();
-        let service = new Service();
+        let service = Service.getInstance();
 
         //get challenger league
         router.get('/challengerLeague', async (req, res) => {

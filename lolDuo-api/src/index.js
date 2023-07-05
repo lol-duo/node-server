@@ -2,7 +2,8 @@ import LeagueController from "./controller/LeagueController.js";
 import SlackService from "./service/slack.js";
 import dotenv from "dotenv";
 import express from "express";
-console.log("0");
+import ServerInfoController from "./controller/ServerInfo.js";
+
 if(process.env.MODE === "dev"){
     dotenv.config({path: process.env.npm_config_local_prefix + "/secret/secret.env"});
 }
@@ -11,11 +12,13 @@ if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
     slackService.sendMessage(process.env.Slack_Channel, "lol-duo api server is running");
 }
-console.log("1");
-const controller = new LeagueController();
+
+const leagueController = new LeagueController();
+const serverController = new ServerInfoController();
 
 let app = new express();
-app.use("/" , controller.getRouter());
+app.use("/" , leagueController.getRouter());
+app.use("/", serverController.getRouter());
 
 //health check
 app.get('/health', (req, res) => {

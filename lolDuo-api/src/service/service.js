@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { Mutex } from 'async-mutex';
+import {Mutex} from 'async-mutex';
 import SlackService from "./slack.js";
 
 class Service {
@@ -15,6 +15,19 @@ class Service {
 
         //set mutex
         this.mutex = new Mutex();
+
+        //set call count
+        this.callCount = 0;
+    }
+
+    //get call count
+    getCallCount() {
+        return this.callCount;
+    }
+
+    //reset call count
+    resetCallCount() {
+        this.callCount = 0;
     }
 
     //get response from url
@@ -25,36 +38,52 @@ class Service {
         const timer = this.timer;
         const now = Date.now();
 
-        //wait if necessary
-        if (now - timer < this.waitTime) await new Promise(resolve => setTimeout(resolve, this.waitTime - (now - timer)));
-
         try {
-            //get response
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: this.headers
-            })
+            let count = 0;
+            while (true) {
+                //wait if necessary
+                if (now - timer < this.waitTime) await new Promise(resolve => setTimeout(resolve, this.waitTime - (now - timer)));
 
-            //check response
-            if (!response.ok) {
-                console.log(JSON.stringify(response))
-                //send Slack message
-                SlackService.getInstance().sendMessage(process.env.Slack_Channel,
-                    `lol-duo-api Service/getResponse Riot 응답 오류 발생 : 
+                //check count
+                if (count++ > 5) {
+                    //send Slack message
+                    SlackService.getInstance().sendMessage(process.env.Slack_Channel,
+                        `lol-duo-api Service/getResponse Riot 요청 오류 발생 : 
+                    url : ${url}
+                    count : ${count}
+                    riot api key : ${process.env.Riot_API_Key}`);
+                    return null;
+                }
+
+                //increase call count
+                this.callCount++;
+
+                //get response
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: this.headers
+                })
+
+                //update timer
+                this.timer = Date.now();
+
+                //check response
+                if (!response.ok) {
+                    console.log(JSON.stringify(response))
+                    //send Slack message
+                    SlackService.getInstance().sendMessage(process.env.Slack_Channel,
+                        `lol-duo-api Service/getResponse Riot 응답 오류 발생 : 
                     url : ${url}
                     status : ${response.status} 
                     statusText : ${response.statusText}
+                    count : ${count}
                     riot api key : ${process.env.Riot_API_Key}`);
-                return null;
+                    continue;
+                }
+
+                //return json
+                return await response.json();
             }
-
-            const json = await response.json();
-
-            //update timer
-            this.timer = Date.now();
-
-            //return json
-            return json;
         } catch (err) {
             SlackService.getInstance().sendMessage(process.env.Slack_Channel, `lol-duo-api Service/getResponse error 발생 : ${err}`);
             return null;
@@ -86,6 +115,17 @@ class Service {
     async getLeagueByTierAndDivision(tier, division,page) {
         const url = `https://kr.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier}/${division}?page=${page}`;
         return await this.getResponse(url);
+    }
+
+    /**
+     * singleton
+     * @returns {Service}
+     */
+    static getInstance() {
+        if (!Service.instance) {
+            Service.instance = new Service();
+        }
+        return Service.instance;
     }
 }
 
