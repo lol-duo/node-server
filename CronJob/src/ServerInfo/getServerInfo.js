@@ -10,6 +10,7 @@ if(process.env.MODE === "dev"){
 const timePerSecond = Number(process.env.TIME_PER_SECOND) || 3600;
 
 let response = await fetch(process.env.RIOT_SERVICE_URL + "/apiCallCount");
+await fetch(process.env.RIOT_SERVICE_URL + "/resetApiCallCount");
 let json = await response.json();
 let apiCallCount = json.count;
 
