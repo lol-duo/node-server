@@ -41,7 +41,7 @@ await awsSQSController.sendSQSMessage(sqsURL, message);
 message = setMessage("MASTER");
 await awsSQSController.sendSQSMessage(sqsURL, message);
 
-let tierList = ["DIAMOND"];
+let tierList = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 let divisionList = ["I", "II", "III", "IV"];
 
 // set all tier and division
