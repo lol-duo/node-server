@@ -104,7 +104,7 @@ while (true){
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
         console.log(`start save ${tier}`)
         let startTimestamp = Date.now();
-        let topSaveTime = 0, lowSaveTime = 0;
+        let topSaveTime = 0, lowSaveTime = 100000;
         // set leagueInfo
         for(let entry of leagueInfo.entries) {
             let newUserInfo = {
