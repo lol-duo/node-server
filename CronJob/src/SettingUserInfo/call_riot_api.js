@@ -84,7 +84,7 @@ while (true){
 
     console.log(`tier : ${tier}, division : ${division}, page : ${page}, url: ${url}`);
     // get league
-    let request; let count = 0; let now = new Date();
+    let request; let count = 0; let now = new Date(); let leagueInfo = null;
 
     while (true) {
         // check count
@@ -105,7 +105,10 @@ while (true){
             if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
             else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
             else if(request.status !== 200) await new Promise(resolve => setTimeout(resolve, 5000));
-            else break;
+            else {
+                leagueInfo = await request.json();
+                break;
+            }
         } catch (err) {
             let slackService = SlackService.getInstance();
             await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
@@ -115,9 +118,9 @@ while (true){
         }
     }
 
-    console.log(`request time : ${new Date() - now}`);
+    if(leagueInfo === null) continue;
 
-    let leagueInfo = await request.json();
+    console.log(`request time : ${new Date() - now}`);
 
     // get model
     let userModel = UserModel(getTodayDate());
