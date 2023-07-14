@@ -10,8 +10,9 @@ class Service {
         }
 
         //set timer
-        this.timer = 0;
-        this.waitTime = Number(process.env.WAIT_TIME) || 200;
+        this.waitCountPerSecond = Number(process.env.WAIT_COUNT_PER_SECOND) || 5;
+        this.timer = new Array(this.waitCountPerSecond).fill(0);
+        this.timerCount = 0;
 
         //set mutex
         this.mutex = new Mutex();
@@ -19,6 +20,26 @@ class Service {
         //set call count
         this.callCount = 0;
     }
+
+    async checkTimer() {
+
+        //acquire mutex
+        const mutex = await this.mutex.acquire();
+
+        // compare requests per second
+        const compareTime = (this.timerCount + this.waitCountPerSecond) % this.waitCountPerSecond;
+
+        //wait if necessary
+        if (Date.now() - this.timer[compareTime] < 1000) await new Promise(resolve => setTimeout(resolve, 1000 - (Date.now() - this.timer[compareTime])));
+
+        //set timer
+        this.timer[this.timerCount] = Date.now();
+        this.timerCount = (this.timerCount + 1) % this.waitCountPerSecond;
+
+        //release mutex
+        mutex();
+    }
+
 
     //get call count
     getCallCount() {
@@ -33,16 +54,13 @@ class Service {
     //get response from url
     async getResponse(url) {
 
-        //5 requests per second
-        const mutex = await this.mutex.acquire();
-        const timer = this.timer;
         const now = Date.now();
 
         try {
             let count = 0;
             while (true) {
                 //wait if necessary
-                if (now - timer < this.waitTime) await new Promise(resolve => setTimeout(resolve, this.waitTime - (now - timer)));
+                await this.checkTimer();
 
                 //check count
                 if (count++ > 5) {
@@ -64,22 +82,8 @@ class Service {
                     headers: this.headers
                 })
 
-                //update timer
-                this.timer = Date.now();
-
                 //check response
-                if (!response.ok) {
-                    console.log(JSON.stringify(response))
-                    //send Slack message
-                    SlackService.getInstance().sendMessage(process.env.Slack_Channel,
-                        `lol-duo-api Service/getResponse Riot 응답 오류 발생 : 
-                    url : ${url}
-                    status : ${response.status} 
-                    statusText : ${response.statusText}
-                    count : ${count}
-                    riot api key : ${process.env.Riot_API_Key}`);
-                    continue;
-                }
+                if (!response.ok) continue;
 
                 //return json
                 return await response.json();
@@ -88,8 +92,7 @@ class Service {
             SlackService.getInstance().sendMessage(process.env.Slack_Channel, `lol-duo-api Service/getResponse error 발생 : ${err}`);
             return null;
         } finally {
-            //release mutex
-            mutex();
+            console.log(`lol-duo-api Service/getResponse : ${Date.now() - now}ms`);
         }
     }
 

@@ -84,17 +84,39 @@ while (true){
 
     console.log(`tier : ${tier}, division : ${division}, page : ${page}, url: ${url}`);
     // get league
-    let request = await fetch(url);
+    let request; let count = 0; let now = new Date();
 
-    // check response status
-    if(request.status !== 200) {
-        let slackService = SlackService.getInstance();
-        await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
+    while (true) {
+        // check count
+        if(count === 5){
+            let slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
          url: ${url}\n
-         status: ${request.status}\n
-         statusText: ${request.statusText}`);
-        continue;
+         error: request failed 5 times`);
+            break;
+        }
+        count++;
+
+        try {
+            request = await fetch(url, {
+                method: "GET"
+            });
+            // check request body
+            if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
+            else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
+            else if(request.status !== 200) await new Promise(resolve => setTimeout(resolve, 5000));
+            else break;
+        } catch (err) {
+            let slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
+         url: ${url}\n
+         error: ${err}`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
     }
+
+    console.log(`request time : ${new Date() - now}`);
+
     let leagueInfo = await request.json();
 
     // get model
@@ -102,7 +124,6 @@ while (true){
 
     // save user info
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
-        console.log(`start save ${tier}`)
         let startTimestamp = Date.now();
         let topSaveTime = 0, lowSaveTime = 100000;
         // set leagueInfo
@@ -152,7 +173,6 @@ while (true){
             await awsSQSController.sendSQSMessage(sqsURL, newMessage);
         }
 
-        console.log(`start save tier : ${tier}, division : ${division}, page : ${page}`)
         let startTimestamp = Date.now();
         let topSaveTime = 0, lowSaveTime = 0;
 
@@ -187,7 +207,6 @@ while (true){
         console.log(`finish save tier : ${tier}, division : ${division}, page : ${page}, time: ${Date.now() - startTimestamp}ms, topSaveTime: ${topSaveTime}ms, lowSaveTime: ${lowSaveTime}ms, averageSaveTime: ${(Date.now() - startTimestamp) / leagueInfo.length}ms`);
     }
 
-    console.log(`SettingUserInfo CronJob finished: ${tier} ${division} ${page}`)
     // delete message
     await awsSQSController.deleteSQSMessage(sqsURL, message[0].ReceiptHandle);
 }
