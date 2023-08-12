@@ -1,9 +1,9 @@
-import SlackService from "../Slack/SlackService.js";
+import SlackService from "../../Slack/SlackService.js";
 import dotenv from "dotenv";
-import AwsSQSController from "../SQS/AwsSQSController.js";
+import AwsSQSController from "../../SQS/AwsSQSController.js";
 import fetch from "node-fetch";
 import mongoose from "mongoose";
-import UserModel from "../Model/UserInfo.js";
+import UserModel from "../../Model/UserInfo.js";
 
 // get today date
 function getTodayDate(){
@@ -67,9 +67,6 @@ while (true){
     // parse message
     let messageBody = JSON.parse(message[0].Body);
 
-    // check message type
-    if(messageBody.type !== "settingUserInfo") continue;
-
     // get tier, division, page
     let tier = messageBody.value.tier;
     let division = messageBody.value.division;
@@ -123,7 +120,7 @@ while (true){
     console.log(`request time : ${new Date() - now}`);
 
     // get model
-    let userModel = UserModel(getTodayDate());
+    let userModel = UserModel;
 
     // save user info
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
@@ -144,7 +141,8 @@ while (true){
                 hotStreak: entry.hotStreak,
                 tier: leagueInfo.tier,
                 leagueId: leagueInfo.leagueId,
-                queueType: leagueInfo.queue
+                queueType: leagueInfo.queue,
+                publish_date: getTodayDate()
             };
 
             let timestamp = Date.now();
@@ -193,7 +191,8 @@ while (true){
                 hotStreak: entry.hotStreak,
                 tier: entry.tier,
                 leagueId: entry.leagueId,
-                queueType: entry.queueType
+                queueType: entry.queueType,
+                publish_date: getTodayDate()
             };
 
             let timestamp = Date.now();

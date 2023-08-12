@@ -54,12 +54,33 @@ const UserInfoSchema = new mongoose.Schema({
     queueType: {
         type: String,
         required: true,
+    },
+    publish_date: {
+        type: String,
+        required: true,
+    },
+    id: {
+        type: String
+    },
+    accountId: {
+        type: String
+    },
+    puuid: {
+        type: String
+    },
+    name: {
+        type: String
+    },
+    profileIconId: {
+        type: Number
+    },
+    revisionDate: {
+        type: Number
+    },
+    summonerLevel: {
+        type: Number
     }
-});
+}, {collection: "userInfo"});
 
-// set model
-function getModel(collectionName) {
-    return mongoose.model(collectionName, UserInfoSchema, collectionName);
-}
 
-export default getModel;
+export default mongoose.model("userInfo", UserInfoSchema);

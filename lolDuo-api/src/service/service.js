@@ -120,6 +120,18 @@ class Service {
         return await this.getResponse(url);
     }
 
+    //get summoner by summoner name
+    async getSummonerBySummonerName(summonerName) {
+        const url = `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURI(summonerName)}`;
+        return await this.getResponse(url);
+    }
+
+    //get summoner by summoner id
+    async getSummonerBySummonerId(summonerId) {
+        const url = `https://kr.api.riotgames.com/lol/summoner/v4/summoners/${summonerId}`;
+        return await this.getResponse(url);
+    }
+
     /**
      * singleton
      * @returns {Service}
