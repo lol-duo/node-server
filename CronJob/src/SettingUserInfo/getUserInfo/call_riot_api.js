@@ -1,9 +1,9 @@
-import SlackService from "../Slack/SlackService.js";
+import SlackService from "../../Slack/SlackService.js";
 import dotenv from "dotenv";
-import AwsSQSController from "../SQS/AwsSQSController.js";
+import AwsSQSController from "../../SQS/AwsSQSController.js";
 import fetch from "node-fetch";
 import mongoose from "mongoose";
-import UserModel from "../Model/UserInfo.js";
+import UserModel from "../../Model/UserInfo.js";
 
 // get today date
 function getTodayDate(){
@@ -61,14 +61,11 @@ let sqsURL = await awsSQSController.get_SQS_URL(process.env.SQS_NAME);
 
 while (true){
     // get SQS message
-    let message = await awsSQSController.getSQSMessage(sqsURL, 600, 20, 1);
+    let message = await awsSQSController.getSQSMessage(sqsURL, 3600, 20, 1);
     if(message === null) break;
 
     // parse message
     let messageBody = JSON.parse(message[0].Body);
-
-    // check message type
-    if(messageBody.type !== "settingUserInfo") continue;
 
     // get tier, division, page
     let tier = messageBody.value.tier;
@@ -84,27 +81,51 @@ while (true){
 
     console.log(`tier : ${tier}, division : ${division}, page : ${page}, url: ${url}`);
     // get league
-    let request = await fetch(url);
+    let request; let count = 0; let now = new Date(); let leagueInfo = null;
 
-    // check response status
-    if(request.status !== 200) {
-        let slackService = SlackService.getInstance();
-        await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
+    while (true) {
+        // check count
+        if(count === 5){
+            let slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
          url: ${url}\n
-         status: ${request.status}\n
-         statusText: ${request.statusText}`);
-        continue;
+         error: request failed 5 times`);
+            break;
+        }
+        count++;
+
+        try {
+            request = await fetch(url, {
+                method: "GET"
+            });
+            // check request body
+            if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
+            else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
+            else if(request.status !== 200) await new Promise(resolve => setTimeout(resolve, 5000));
+            else {
+                leagueInfo = await request.json();
+                break;
+            }
+        } catch (err) {
+            let slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
+         url: ${url}\n
+         error: ${err}`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
     }
-    let leagueInfo = await request.json();
+
+    if(leagueInfo === null) continue;
+
+    console.log(`request time : ${new Date() - now}`);
 
     // get model
-    let userModel = UserModel(getTodayDate());
+    let userModel = UserModel;
 
     // save user info
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
-        console.log(`start save ${tier}`)
         let startTimestamp = Date.now();
-        let topSaveTime = 0, lowSaveTime = 0;
+        let topSaveTime = 0, lowSaveTime = 100000;
         // set leagueInfo
         for(let entry of leagueInfo.entries) {
             let newUserInfo = {
@@ -120,7 +141,8 @@ while (true){
                 hotStreak: entry.hotStreak,
                 tier: leagueInfo.tier,
                 leagueId: leagueInfo.leagueId,
-                queueType: leagueInfo.queue
+                queueType: leagueInfo.queue,
+                publish_date: getTodayDate()
             };
 
             let timestamp = Date.now();
@@ -152,7 +174,6 @@ while (true){
             await awsSQSController.sendSQSMessage(sqsURL, newMessage);
         }
 
-        console.log(`start save tier : ${tier}, division : ${division}, page : ${page}`)
         let startTimestamp = Date.now();
         let topSaveTime = 0, lowSaveTime = 0;
 
@@ -170,7 +191,8 @@ while (true){
                 hotStreak: entry.hotStreak,
                 tier: entry.tier,
                 leagueId: entry.leagueId,
-                queueType: entry.queueType
+                queueType: entry.queueType,
+                publish_date: getTodayDate()
             };
 
             let timestamp = Date.now();
@@ -187,7 +209,6 @@ while (true){
         console.log(`finish save tier : ${tier}, division : ${division}, page : ${page}, time: ${Date.now() - startTimestamp}ms, topSaveTime: ${topSaveTime}ms, lowSaveTime: ${lowSaveTime}ms, averageSaveTime: ${(Date.now() - startTimestamp) / leagueInfo.length}ms`);
     }
 
-    console.log(`SettingUserInfo CronJob finished: ${tier} ${division} ${page}`)
     // delete message
     await awsSQSController.deleteSQSMessage(sqsURL, message[0].ReceiptHandle);
 }
@@ -197,3 +218,9 @@ if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
     await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
 }
+
+//connection close
+await mongoose.disconnect();
+
+//finish process
+process.exit(0);

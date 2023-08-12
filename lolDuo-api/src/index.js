@@ -3,6 +3,7 @@ import SlackService from "./service/slack.js";
 import dotenv from "dotenv";
 import express from "express";
 import ServerInfoController from "./controller/ServerInfo.js";
+import SummonerController from "./controller/SummonerController.js";
 
 if(process.env.MODE === "dev"){
     dotenv.config({path: process.env.npm_config_local_prefix + "/secret/secret.env"});
@@ -15,10 +16,12 @@ if(process.env.MODE === "prod"){
 
 const leagueController = new LeagueController();
 const serverController = new ServerInfoController();
+const summonerController = new SummonerController();
 
 let app = new express();
 app.use("/" , leagueController.getRouter());
 app.use("/", serverController.getRouter());
+app.use("/", summonerController.getRouter());
 
 //health check
 app.get('/health', (req, res) => {

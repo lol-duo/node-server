@@ -1,6 +1,6 @@
-import SlackService from "../Slack/SlackService.js";
+import SlackService from "../../Slack/SlackService.js";
 import dotenv from "dotenv";
-import AwsSQSController from "../SQS/AwsSQSController.js";
+import AwsSQSController from "../../SQS/AwsSQSController.js";
 
 // set dotenv if MODE is dev
 if(process.env.MODE === "dev"){
@@ -20,7 +20,6 @@ let sqsURL = await awsSQSController.get_SQS_URL(process.env.SQS_NAME);
 // message template
 function setMessage(tier, division = "I"){
     return {
-        type: "settingUserInfo",
         value: {
             tier: tier,
             division: division,
@@ -41,7 +40,7 @@ await awsSQSController.sendSQSMessage(sqsURL, message);
 message = setMessage("MASTER");
 await awsSQSController.sendSQSMessage(sqsURL, message);
 
-let tierList = ["DIAMOND"];
+let tierList = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 let divisionList = ["I", "II", "III", "IV"];
 
 // set all tier and division
