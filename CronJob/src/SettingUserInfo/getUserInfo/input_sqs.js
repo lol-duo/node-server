@@ -40,16 +40,16 @@ await awsSQSController.sendSQSMessage(sqsURL, message);
 message = setMessage("MASTER");
 await awsSQSController.sendSQSMessage(sqsURL, message);
 
-let tierList = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
-let divisionList = ["I", "II", "III", "IV"];
-
-// set all tier and division
-for(let tier of tierList){
-    for(let division of divisionList){
-        message = setMessage(tier, division);
-        await awsSQSController.sendSQSMessage(sqsURL, message);
-    }
-}
+// let tierList = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
+// let divisionList = ["I", "II", "III", "IV"];
+//
+// // set all tier and division
+// for(let tier of tierList){
+//     for(let division of divisionList){
+//         message = setMessage(tier, division);
+//         await awsSQSController.sendSQSMessage(sqsURL, message);
+//     }
+// }
 
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
