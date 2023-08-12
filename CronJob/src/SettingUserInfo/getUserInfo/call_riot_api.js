@@ -25,12 +25,14 @@ if(process.env.MODE === "dev"){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running : Date " + getTodayDate());
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running : Date " + getTodayDate() + "POD : " + process.env.POD_NAME);
 }
 
 // set mongoose
 try {
-    mongoose.connect(process.env.mongoDB_URI, {
+    console.log(process.env.mongoDB_URI);
+    console.log(process.env);
+    await mongoose.connect(process.env.mongoDB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         dbName: "riot"

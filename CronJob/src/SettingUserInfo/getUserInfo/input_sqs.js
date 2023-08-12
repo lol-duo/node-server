@@ -10,7 +10,7 @@ if(process.env.MODE === "dev"){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob SQS_INPUT is running");
 }
 
 // get SQS URL
@@ -54,5 +54,5 @@ await awsSQSController.sendSQSMessage(sqsURL, message);
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob SQS_INPUT is finished");
 }
