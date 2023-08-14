@@ -13,7 +13,7 @@ if(process.env.MODE === "dev"){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running : Date " + getTodayDate());
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running");
 }
 
 // set mongoose
