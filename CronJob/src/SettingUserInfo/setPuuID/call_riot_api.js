@@ -98,7 +98,8 @@ while (true){
         let dbStartTIme = Date.now();
 
         // get user by summonerId
-        let user = await UserModel.findOne({summonerId: summonerInfo.id});
+        let query = { puuid: { $exists: false } , summonerId: summonerInfo.id };
+        let user = await UserModel.findOne(query).sort({publish_date: -1});
         if(user === null) continue;
 
         // check db time
