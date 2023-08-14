@@ -18,7 +18,8 @@ if(process.env.MODE === "prod"){
 
 // set mongoose
 try {
-    mongoose.connect(process.env.mongoDB_URI, {
+    console.log(process.env.mongoDB_URI);
+    await mongoose.connect(process.env.mongoDB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         dbName: "riot"
