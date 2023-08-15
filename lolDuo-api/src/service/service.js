@@ -132,6 +132,22 @@ class Service {
         return await this.getResponse(url);
     }
 
+    //get match info by match id
+    async getMatchInfoByMatchId(matchId) {
+        let url = `https://asia.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+        if(matchId[0] === 'K' && matchId[1] === 'R') url = `https://asia.api.riotgames.com/lol/match/v5/matches/${matchId}`;
+
+        return await this.getResponse(url);
+    }
+
+    //get match timeline by match id
+    async getMatchTimelineByMatchId(matchId) {
+        let url = `https://asia.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`;
+        if(matchId[0] === 'K' && matchId[1] === 'R') url = `https://asia.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline`;
+
+        return await this.getResponse(url);
+    }
+
     /**
      * singleton
      * @returns {Service}

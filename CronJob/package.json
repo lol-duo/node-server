@@ -12,6 +12,10 @@
     "prodSetPuuId_SQS_INPUT": "MODE=prod node src/SettingUserInfo/setPuuID/input_sqs.js",
     "devSetPuuId_CallApi": "MODE=dev nodemon src/SettingUserInfo/setPuuID/call_riot_api.js",
     "prodSetPuuId_CallApi": "MODE=prod node src/SettingUserInfo/setPuuID/call_riot_api.js",
+    "devSetMatchId_SQS_INPUT": "MODE=dev nodemon src/SettingMatch/input_sqs.js",
+    "prodSetMatchId_SQS_INPUT": "MODE=prod node src/SettingMatch/input_sqs.js",
+    "devSetMatchId_CallApi": "MODE=dev nodemon src/SettingMatch/call_riot_api.js",
+    "prodSetMatchId_CallApi": "MODE=prod node src/SettingMatch/call_riot_api.js",
     "devGetServerInfo": "MODE=dev nodemon src/ServerInfo/getServerInfo.js",
     "prodGetServerInfo": "MODE=prod node src/ServerInfo/getServerInfo.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,6 +26,7 @@
     "@aws-sdk/client-sqs": "^3.363.0",
     "@slack/web-api": "^6.8.1",
     "dotenv": "^16.3.1",
+    "mongodb": "^5.7.0",
     "mongoose": "^7.3.1",
     "node-fetch": "^3.3.1",
     "nodemon": "^2.0.22"
