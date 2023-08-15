@@ -83,7 +83,7 @@ class Service {
                 })
 
                 //check response
-                if (response.statusCode.toString()[0] === '5') {
+                if (response.status.toString()[0] === '5') {
                     continue;
                 }
 
