@@ -28,19 +28,23 @@ function setMessage(tier, division = "I"){
     }
 }
 
-// set Challenger
-let message = setMessage("CHALLENGER");
-await awsSQSController.sendSQSMessage(sqsURL, message);
+// // set Challenger
+// let message = setMessage("CHALLENGER");
+// await awsSQSController.sendSQSMessage(sqsURL, message);
+//
+// // set GrandMaster
+// message = setMessage("GRANDMASTER");
+// await awsSQSController.sendSQSMessage(sqsURL, message);
+//
+// // set Master
+// message = setMessage("MASTER");
+// await awsSQSController.sendSQSMessage(sqsURL, message);
 
-// set GrandMaster
-message = setMessage("GRANDMASTER");
-await awsSQSController.sendSQSMessage(sqsURL, message);
+// let tierList = ["DIAMOND"];
+// let divisionList = ["I", "II", "III", "IV"];
 
-// set Master
-message = setMessage("MASTER");
-await awsSQSController.sendSQSMessage(sqsURL, message);
-
-let tierList = ["DIAMOND"];
+let message;
+let tierList = ["EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 let divisionList = ["I", "II", "III", "IV"];
 
 // set all tier and division
