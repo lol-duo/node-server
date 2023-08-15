@@ -16,7 +16,8 @@ if(process.env.MODE === "prod"){
     await slackService.sendMessage(process.env.Slack_Channel, "Add Match CronJob is running");
 }
 
-let collection = null;
+let matchCollection = null;
+let matchTimeLineCollection = null;
 
 // set mongoose
 try {
@@ -24,7 +25,8 @@ try {
     await client.connect();
 
     const database = client.db("riot");
-    collection = database.collection("match");
+    matchCollection = database.collection("match");
+    matchTimeLineCollection = database.collection("matchTimeLine");
 
 } catch (err) {
     // send Slack message
@@ -146,8 +148,8 @@ while (true){
 
         let dbStartTime = Date.now();
         // insert matchInfo
-        collection.insertOne(matchTimeLine);
-        collection.insertOne(matchInfo);
+        matchCollection.insertOne(matchInfo);
+        matchTimeLineCollection.insertOne(matchTimeLine);
         console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
 
@@ -160,9 +162,6 @@ if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
     await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
 }
-
-//connection close
-await mongoose.disconnect();
 
 //finish process
 process.exit(0);
