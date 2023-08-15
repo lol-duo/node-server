@@ -98,6 +98,7 @@ while (true){
         }
 
         if(matchInfo === null) continue;
+        if(matchInfo.hasOwnProperty("status")) continue;
 
         console.log(`request time : ${new Date() - now}`);
 
@@ -143,6 +144,7 @@ while (true){
         }
 
         if(matchTimeLine === null) continue;
+        if(matchTimeLine.hasOwnProperty("status")) continue;
 
         console.log(`request time : ${new Date() - now}`);
 
