@@ -10,7 +10,7 @@ if(process.env.MODE === "dev"){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is running");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob SQS_INPUT is running");
 }
 
 // get SQS URL
@@ -40,19 +40,19 @@ await awsSQSController.sendSQSMessage(sqsURL, message);
 message = setMessage("MASTER");
 await awsSQSController.sendSQSMessage(sqsURL, message);
 
-// let tierList = ["DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
-// let divisionList = ["I", "II", "III", "IV"];
-//
-// // set all tier and division
-// for(let tier of tierList){
-//     for(let division of divisionList){
-//         message = setMessage(tier, division);
-//         await awsSQSController.sendSQSMessage(sqsURL, message);
-//     }
-// }
+let tierList = ["DIAMOND"];
+let divisionList = ["I", "II", "III", "IV"];
+
+// set all tier and division
+for(let tier of tierList){
+    for(let division of divisionList){
+        message = setMessage(tier, division);
+        await awsSQSController.sendSQSMessage(sqsURL, message);
+    }
+}
 
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob SQS_INPUT is finished");
 }
