@@ -83,7 +83,9 @@ class Service {
                 })
 
                 //check response
-                if (!response.ok) continue;
+                if (response.statusCode.toString()[0] === '5') {
+                    continue;
+                }
 
                 //return json
                 return await response.json();

@@ -62,7 +62,7 @@ while (true){
             if(count === 5){
                 let slackService = SlackService.getInstance();
                 await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
-             url: ${url}\n
+             url: ${matchURL}\n
              error: request failed 5 times`);
                 break;
             }
@@ -75,7 +75,13 @@ while (true){
                 // check request body
                 if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
                 else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
-                else if(request.status !== 200) await new Promise(resolve => setTimeout(resolve, 5000));
+                else if(request.status !== 200) {
+                    if(request.status === 404 && request.body.status.message === "Data not found - match file not found"){
+                        matchInfo = null;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
                 else {
                     matchInfo = await request.json();
                     break;
@@ -92,7 +98,7 @@ while (true){
         if(matchInfo === null) continue;
 
         console.log(`request time : ${new Date() - now}`);
-        collection.insertOne(matchInfo);
+
 
         let matchTimeLine = null;
 
@@ -101,7 +107,7 @@ while (true){
             if(count === 5){
                 let slackService = SlackService.getInstance();
                 await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
-             url: ${url}\n
+             url: ${matchTimeLineURL}\n
              error: request failed 5 times`);
                 break;
             }
@@ -114,7 +120,13 @@ while (true){
                 // check request body
                 if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
                 else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
-                else if(request.status !== 200) await new Promise(resolve => setTimeout(resolve, 5000));
+                else if(request.status !== 200) {
+                    if(request.status === 404 && request.body.status.message === "Data not found - match file not found"){
+                        matchTimeLine = null;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
                 else {
                     matchTimeLine = await request.json();
                     break;
@@ -131,7 +143,12 @@ while (true){
         if(matchTimeLine === null) continue;
 
         console.log(`request time : ${new Date() - now}`);
+
+        let dbStartTime = Date.now();
+        // insert matchInfo
         collection.insertOne(matchTimeLine);
+        collection.insertOne(matchInfo);
+        console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
 
     // delete message
