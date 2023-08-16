@@ -95,6 +95,8 @@ while (true){
             }
         }
 
+        if(summonerInfo.hasOwnProperty("status") || !summonerInfo.hasOwnProperty("puuid")) continue;
+
         let dbStartTIme = Date.now();
 
         // get user by summonerId

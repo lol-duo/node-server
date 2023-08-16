@@ -117,6 +117,7 @@ while (true){
     }
 
     if(leagueInfo === null) continue;
+    if(leagueInfo.hasOwnProperty("status")) continue;
 
     console.log(`request time : ${new Date() - now}`);
 
@@ -125,6 +126,7 @@ while (true){
 
     // save user info
     if(tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER"){
+        if(!leagueInfo.hasOwnProperty("entries")) continue;
         let startTimestamp = Date.now();
         let topSaveTime = 0, lowSaveTime = 100000;
         // set leagueInfo
