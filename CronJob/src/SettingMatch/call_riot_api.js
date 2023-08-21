@@ -40,6 +40,7 @@ try {
 // get SQS URL
 let awsSQSController = AwsSQSController.getInstance();
 let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCH_SQS_NAME);
+let totalSaveCount = 0;
 
 while (true){
     // get SQS message
@@ -97,8 +98,14 @@ while (true){
             }
         }
 
-        if(matchInfo === null) continue;
-        if(matchInfo.hasOwnProperty("status")) continue;
+        if(matchInfo === null) {
+            console.log(`request time : ${new Date() - now} && skip (matchInfo === null)`);
+            continue;
+        }
+        if(matchInfo.hasOwnProperty("status")){
+            console.log(`request time : ${new Date() - now} && skip (matchInfo.hasOwnProperty("status"))`);
+            continue;
+        }
 
         console.log(`request time : ${new Date() - now}`);
 
@@ -143,8 +150,14 @@ while (true){
             }
         }
 
-        if(matchTimeLine === null) continue;
-        if(matchTimeLine.hasOwnProperty("status")) continue;
+        if(matchTimeLine === null) {
+            console.log(`request time : ${new Date() - now} && skip (matchTimeLine === null)`);
+            continue;
+        }
+        if(matchTimeLine.hasOwnProperty("status")) {
+            console.log(`request time : ${new Date() - now} && skip (matchTimeLine.hasOwnProperty("status"))`);
+            continue;
+        }
 
         console.log(`request time : ${new Date() - now}`);
 
@@ -161,6 +174,8 @@ while (true){
 
             //finish process
             continue;
+        } finally {
+            totalSaveCount++;
         }
         console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
@@ -172,7 +187,7 @@ while (true){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished \n totalSaveCount: " + totalSaveCount);
 }
 
 //finish process
