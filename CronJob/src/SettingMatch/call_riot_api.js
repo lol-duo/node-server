@@ -150,8 +150,18 @@ while (true){
 
         let dbStartTime = Date.now();
         // insert matchInfo
-        matchCollection.insertOne(matchInfo);
-        matchTimeLineCollection.insertOne(matchTimeLine);
+        try {
+            matchCollection.insertOne(matchInfo);
+            matchTimeLineCollection.insertOne(matchTimeLine);
+        } catch (err) {
+            // send Slack message
+            const slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err} 
+           \n matchInfo: ${JSON.stringify(matchInfo)} \n keep going...`);
+
+            //finish process
+            continue;
+        }
         console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
 

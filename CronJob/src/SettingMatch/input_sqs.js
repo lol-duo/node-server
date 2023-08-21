@@ -51,12 +51,15 @@ let start = Date.now();
 let currentMatch = await collection.find({}).sort({'metadata.matchId': -1}).limit(1).toArray();
 console.log("queryTime: " + (Date.now() - start) + "ms");
 
+
 let startMatchId;
 // check userInfoList
 if (currentMatch.length === 0) {
     startMatchId = "KR_6650978642";
+    console.log("currentMatch: " + "startMatchId");
 }else {
     startMatchId = currentMatch[0].metadata.matchId;
+    console.log("currentMatch: " + currentMatch[0].metadata.matchId);
 }
 
 let startMatchIdInt = parseInt(startMatchId.split("_")[1]);
@@ -65,7 +68,7 @@ let endMatchIdInt = startMatchIdInt + parseInt(process.env.MATCH_COUNT);
 // get matchIdList
 let messageList = [];
 let count = 1;
-for(let i = startMatchIdInt; i < endMatchIdInt; i++){
+for(let i = startMatchIdInt + 1; i <= endMatchIdInt; i++){
     if(count % 1000 === 0) {
         await awsSQSController.sendSQSMessage(sqsURL, messageList);
         messageList = [];
