@@ -169,8 +169,12 @@ while (true){
         } catch (err) {
             // send Slack message
             const slackService = SlackService.getInstance();
-            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err} 
-           \n matchInfo: ${JSON.stringify(matchInfo)} \n keep going...`);
+            let matchId = "no matchId";
+            if(matchInfo.hasOwnProperty("metadata") && matchInfo.metadata.hasOwnProperty("matchId")){
+                matchId = matchInfo.metadata.matchId;
+            }
+            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error - matchId : ${matchId} 
+           \n keep going...`);
 
             //finish process
             continue;
