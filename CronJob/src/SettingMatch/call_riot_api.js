@@ -164,8 +164,8 @@ while (true){
         let dbStartTime = Date.now();
         // insert matchInfo
         try {
-            matchCollection.insertOne(matchInfo);
-            matchTimeLineCollection.insertOne(matchTimeLine);
+            await matchCollection.insertOne(matchInfo);
+            await matchTimeLineCollection.insertOne(matchTimeLine);
         } catch (err) {
             // send Slack message
             const slackService = SlackService.getInstance();
