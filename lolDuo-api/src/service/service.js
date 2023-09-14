@@ -63,7 +63,7 @@ class Service {
                 await this.checkTimer();
 
                 //check count
-                if (count++ > 5) {
+                if (count++ > 10) {
                     //send Slack message
                     SlackService.getInstance().sendMessage(process.env.Slack_Channel,
                         `lol-duo-api Service/getResponse Riot 요청 오류 발생 : 
@@ -76,19 +76,24 @@ class Service {
                 //increase call count
                 this.callCount++;
 
-                //get response
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: this.headers
-                })
+                try {
+                    //get response
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: this.headers
+                    })
 
-                //check response
-                if (response.status.toString()[0] === '5') {
-                    continue;
+                    //check response
+                    if (response.status.toString()[0] === '5') {
+                        continue;
+                    }
+
+                    //return json
+                    return await response.json();
+
+                } catch (err) {
+                    console.log(`lol-duo-api Service/getResponse error 발생 및 재시도 ${count}회 중 : ${err}`);
                 }
-
-                //return json
-                return await response.json();
             }
         } catch (err) {
             SlackService.getInstance().sendMessage(process.env.Slack_Channel, `lol-duo-api Service/getResponse error 발생 : ${err}`);
