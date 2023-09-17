@@ -2,6 +2,7 @@ import SlackService from "../../Slack/SlackService.js";
 import dotenv from "dotenv";
 import AwsSQSController from "../../SQS/AwsSQSController.js";
 import UserModel from "../../Model/UserInfo.js";
+import PuuidModel from "../../Model/PuuidInfo.js";
 import mongoose from "mongoose";
 
 // set dotenv if MODE is dev
@@ -47,11 +48,16 @@ let awsSQSController = AwsSQSController.getInstance();
 let sqsURL = await awsSQSController.get_SQS_URL(process.env.PUUID_SQS_NAME);
 
 // message template
-function setMessage(summonerName, summonerId){
+function setMessage(summonerName, summonerId, leaguePoints, rank, tier, leagueId, queueType){
     return {
         value: {
             summonerId: summonerId,
-            summonerName: summonerName
+            summonerName: summonerName,
+            leaguePoints: leaguePoints,
+            rank: rank,
+            tier: tier,
+            leagueId: leagueId,
+            queueType: queueType,
         }
     }
 }
@@ -62,26 +68,31 @@ let cursor = null;
 
 while (true) {
     // set cursor
-    let query = { puuid: { $exists: false } };
+    let query = {};
     if (cursor !== null) query._id = { $gt: cursor };
 
     // get userInfoList
     let start = Date.now();
-    let userInfoList = await UserModel.find(query).select('summonerId summonerName').sort({_id: 1}).limit(1000);
+    let userInfoList = await UserModel.find(query).select('summonerName summonerId leaguePoints rank tier leagueId queueType').sort({_id: 1}).limit(1000);
     console.log("queryTime: " + (Date.now() - start) + "ms");
 
     // check userInfoList
     if (userInfoList.length === 0) break;
 
+    let setMessageTime = Date.now();
+    // set SQS message
+    let sqsMessageList = [];
+    for(let userInfo of userInfoList){
+        let puuid = await PuuidModel.findOne({summonerId: userInfo.summonerId});
+        if(puuid === null) sqsMessageList.push(setMessage(userInfo.summonerName, userInfo.summonerId, userInfo.leaguePoints, userInfo.rank, userInfo.tier, userInfo.leagueId, userInfo.queueType));
+    }
+    console.log("setMessageTime: " + (Date.now() - setMessageTime) + "ms");
+
     // set cursor
     cursor = userInfoList[userInfoList.length - 1]._id;
 
-    let messageList = [];
-    for (let i = 0; i < userInfoList.length; i++)
-        messageList.push(setMessage(userInfoList[i].summonerName, userInfoList[i].summonerId));
-
     // send SQS message
-    await awsSQSController.sendSQSMessage(sqsURL, messageList);
+    await awsSQSController.sendSQSMessage(sqsURL, sqsMessageList);
 }
 
 // send Slack message if MODE is prod

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import AwsSQSController from "../../SQS/AwsSQSController.js";
 import fetch from "node-fetch";
 import mongoose from "mongoose";
-import UserModel from "../../Model/UserInfo.js";
+import PuuidInfo from "../../Model/PuuidInfo.js";
 
 // set dotenv if MODE is dev
 if(process.env.MODE === "dev"){
@@ -97,28 +97,37 @@ while (true){
 
         if(summonerInfo.hasOwnProperty("status") || !summonerInfo.hasOwnProperty("puuid")) continue;
 
-        let dbStartTIme = Date.now();
+        let dbStartTime = Date.now();
 
         // get user by summonerId
-        let query = { puuid: { $exists: false } , summonerId: summonerInfo.id };
-        let user = await UserModel.findOne(query).sort({publish_date: -1});
-        if(user === null) continue;
+        let query = { puuid: summonerInfo.puuid };
+        let user = await PuuidInfo.findOne(query);
+        if(user === null) {
+            // check db time
+            console.log(`db query time: ${Date.now() - dbStartTime}`);
 
-        // check db time
-        console.log(`db query time: ${Date.now() - dbStartTIme}`);
-        dbStartTIme = Date.now();
+            let newUser = {
+                accountId: summonerInfo.accountId,
+                profileIconId: summonerInfo.profileIconId,
+                revisionDate: summonerInfo.revisionDate,
+                summonerLevel: summonerInfo.summonerLevel,
+                name: summonerInfo.name,
+                puuid: summonerInfo.puuid,
+                summonerName: messageBody[i].value.summonerName,
+                summonerId: messageBody[i].value.summonerId,
+                leaguePoints: messageBody[i].value.leaguePoints,
+                rank: messageBody[i].value.rank,
+                tier: messageBody[i].value.tier,
+                leagueId: messageBody[i].value.leagueId,
+                queueType: messageBody[i].value.queueType
+            }
+            dbStartTime = Date.now();
+            let newPuuidInfo = new PuuidInfo(newUser);
+            await newPuuidInfo.save();
 
-        // update user
-        user.accountId = summonerInfo.accountId;
-        user.profileIconId = summonerInfo.profileIconId;
-        user.revisionDate = summonerInfo.revisionDate;
-        user.summonerLevel = summonerInfo.summonerLevel;
-        user.name = summonerInfo.name;
-        user.puuid = summonerInfo.puuid;
-        await user.save();
-
-        // check db time
-        console.log(`db save time: ${Date.now() - dbStartTIme}`);
+            // check db time
+            console.log(`db save time: ${Date.now() - dbStartTime}`);
+        }
     }
 
     // delete message

@@ -22,7 +22,7 @@ try {
     await client.connect();
 
     const database = client.db("riot");
-    collection = database.collection("match");
+    collection = database.collection("userInfo");
 
 } catch (err) {
     // send Slack message
@@ -48,36 +48,11 @@ function setMessage(matchId){
 
 // get userInfoList
 let start = Date.now();
-let currentMatch = await collection.find({}).sort({'metadata.matchId': -1}).limit(1).toArray();
-console.log("queryTime: " + (Date.now() - start) + "ms");
+let tierList = ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND","AM", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 
-
-let startMatchId;
-// check userInfoList
-if (currentMatch.length === 0) {
-    startMatchId = "KR_6650978642";
-    console.log("currentMatch: " + "startMatchId");
-}else {
-    startMatchId = currentMatch[0].metadata.matchId;
-    console.log("currentMatch: " + currentMatch[0].metadata.matchId);
+while (true){
+    let puuIdList = await collection.find({ "puuId": { $exists: true }}).sort({'puuid': 1}).project({"puuid":1, _id:0}).limit(1000).toArray();
 }
-
-let startMatchIdInt = parseInt(startMatchId.split("_")[1]);
-let endMatchIdInt = startMatchIdInt + parseInt(process.env.MATCH_COUNT);
-
-// get matchIdList
-let messageList = [];
-let count = 1;
-for(let i = startMatchIdInt + 1; i <= endMatchIdInt; i++){
-    if(count % 1000 === 0) {
-        await awsSQSController.sendSQSMessage(sqsURL, messageList);
-        messageList = [];
-    }
-    messageList.push(setMessage("KR_" + i));
-    count++;
-}
-await awsSQSController.sendSQSMessage(sqsURL, messageList);
-
 
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
