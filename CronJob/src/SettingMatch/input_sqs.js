@@ -18,6 +18,7 @@ let collection;
 
 // set mongoose
 try {
+    console.log(process.env.mongoDB_URI);
     const client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
     await client.connect();
 
@@ -48,15 +49,16 @@ function setMessage(puuid){
 
 // get userInfoList
 let cursor = null;
-let tierList = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD" , "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"]
+let tierList = ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 
 for(let i = 0; i < tierList.length; i++) {
-    let messageList = [];
+
     while(true) {
         let filter = {};
+        let messageList = [];
         if (cursor !== null) filter = {"puuid": {$gt: cursor}};
 
-        let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(500).toArray();
+        let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(1000).toArray();
         if (puuIdList.length === 0) break;
 
         for (let j = 0; j < puuIdList.length; j++) {
