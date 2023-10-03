@@ -155,6 +155,13 @@ class Service {
         return await this.getResponse(url);
     }
 
+    //get match list by puuid
+    async getMatchListByPuuid(puuid) {
+        let url = `https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=100`;
+
+        return await this.getResponse(url);
+    }
+
     /**
      * singleton
      * @returns {Service}

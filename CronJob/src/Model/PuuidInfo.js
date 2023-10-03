@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 // set schema
-const UserInfoSchema = new mongoose.Schema({
+const PuuidSchema = new mongoose.Schema({
     summonerId: {
         type: String,
         required: true,
@@ -35,10 +35,6 @@ const UserInfoSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    id: {
-        type: String,
-        required: true,
-    },
     accountId: {
         type: String,
         required: true,
@@ -66,4 +62,4 @@ const UserInfoSchema = new mongoose.Schema({
 }, {collection: "puuidInfo"});
 
 
-export default mongoose.model("puuidInfo", UserInfoSchema);
+export default mongoose.model("puuidInfo", PuuidSchema);

@@ -7,6 +7,11 @@ class MatchController {
         let router = express.Router();
         let service = Service.getInstance();
 
+        //get match list by puuid
+        router.get('/matches/by-puuid/:puuid', async (req, res) => {
+            const puuid = req.params.puuid;
+            res.send(await service.getMatchListByPuuid(puuid));
+        });
         //get challenger league
         router.get('/matches/:id', async (req, res) => {
             const matchId = req.params.id;

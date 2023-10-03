@@ -59,9 +59,6 @@ const UserInfoSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    id: {
-        type: String
-    },
     accountId: {
         type: String
     },

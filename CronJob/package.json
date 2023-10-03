@@ -18,7 +18,8 @@
     "prodSetMatchId_CallApi": "MODE=prod node src/SettingMatch/call_riot_api.js",
     "devGetServerInfo": "MODE=dev nodemon src/ServerInfo/getServerInfo.js",
     "prodGetServerInfo": "MODE=prod node src/ServerInfo/getServerInfo.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tt" : "node src/Model/test.js"
   },
   "author": "",
   "license": "ISC",
