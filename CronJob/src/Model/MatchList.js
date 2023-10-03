@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 // set schema
 const MatchListSchema = new mongoose.Schema({
     matchId: {
-        type: Number,
+        type: String,
         required: true,
     },
     matchInfoDone: {
