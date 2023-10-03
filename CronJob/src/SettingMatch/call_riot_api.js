@@ -2,7 +2,8 @@ import SlackService from "../Slack/SlackService.js";
 import dotenv from "dotenv";
 import AwsSQSController from "../SQS/AwsSQSController.js";
 import fetch from "node-fetch";
-import {MongoClient} from "mongodb";
+import mongoose from "mongoose";
+import MatchList from "../Model/MatchList.js";
 
 
 // set dotenv if MODE is dev
@@ -16,18 +17,26 @@ if(process.env.MODE === "prod"){
     await slackService.sendMessage(process.env.Slack_Channel, "Add Match CronJob is running");
 }
 
-let matchCollection = null;
-let matchTimeLineCollection = null;
-
+// set mongoose
 // set mongoose
 try {
-    const client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
-    await client.connect();
+    console.log(process.env.mongoDB_URI);
+    await mongoose.connect(process.env.mongoDB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: "riot"
+    })
+        .then(() => console.log("mongoDB connected"))
+        .catch(
+            async (err) => {
+                // send Slack message
+                const slackService = SlackService.getInstance();
+                await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err}`);
 
-    const database = client.db("riot");
-    matchCollection = database.collection("match");
-    matchTimeLineCollection = database.collection("matchTimeLine");
-
+                //finish process
+                process.exit(1);
+            }
+        );
 } catch (err) {
     // send Slack message
     const slackService = SlackService.getInstance();
@@ -51,14 +60,13 @@ while (true){
     let messageBody = JSON.parse(message[0].Body);
 
     for(let i = 0; i < messageBody.length; i++){
-        // get matchId
-        let matchId = messageBody[i].value.matchId;
+        // get puuid
+        let puuid = messageBody[i].value.puuid;
 
-        let matchURL = `${process.env.RIOT_SERVICE_URL}/matches/${matchId}`;
-        let matchTimeLineURL = `${process.env.RIOT_SERVICE_URL}/matches/${matchId}/timeline`;
+        let matchListURL = `${process.env.RIOT_SERVICE_URL}/matches/by-puuid/${puuid}`;
 
-        // get league
-        let request; let count = 0; let now = new Date(); let matchInfo = null;
+        // get matchList
+        let request; let count = 0; let now = new Date(); let matchListInfo = null;
 
         while (true) {
             // check count
@@ -72,7 +80,7 @@ while (true){
             count++;
 
             try {
-                request = await fetch(matchURL, {
+                request = await fetch(matchListURL, {
                     method: "GET"
                 });
                 // check request body
@@ -80,13 +88,13 @@ while (true){
                 else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
                 else if(request.status !== 200) {
                     if(request.status === 404 && request.body.status.message === "Data not found - match file not found"){
-                        matchInfo = null;
+                        matchListInfo = null;
                         break;
                     }
                     await new Promise(resolve => setTimeout(resolve, 5000));
                 }
                 else {
-                    matchInfo = await request.json();
+                    matchListInfo = await request.json();
                     break;
                 }
             } catch (err) {
@@ -98,88 +106,26 @@ while (true){
             }
         }
 
-        if(matchInfo === null) {
+        if(matchListInfo === null) {
             console.log(`request time : ${new Date() - now} && skip (matchInfo === null)`);
-            continue;
-        }
-        if(matchInfo.hasOwnProperty("status")){
-            console.log(`request time : ${new Date() - now} && skip (matchInfo.hasOwnProperty("status"))`);
-            continue;
-        }
-
-        console.log(`request time : ${new Date() - now}`);
-
-
-        let matchTimeLine = null;
-
-        while (true) {
-            // check count
-            if(count === 5){
-                let slackService = SlackService.getInstance();
-                await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
-             url: ${matchTimeLineURL}\n
-             error: request failed 5 times`);
-                break;
-            }
-            count++;
-
-            try {
-                request = await fetch(matchTimeLineURL, {
-                    method: "GET"
-                });
-                // check request body
-                if(request.body === null) await new Promise(resolve => setTimeout(resolve, 5000));
-                else if(request.body === undefined) await new Promise(resolve => setTimeout(resolve, 5000));
-                else if(request.status !== 200) {
-                    if(request.status === 404 && request.body.status.message === "Data not found - match file not found"){
-                        matchTimeLine = null;
-                        break;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                }
-                else {
-                    matchTimeLine = await request.json();
-                    break;
-                }
-            } catch (err) {
-                let slackService = SlackService.getInstance();
-                await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n
-             url: ${matchTimeLineURL}\n
-             error: ${err}`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-            }
-        }
-
-        if(matchTimeLine === null) {
-            console.log(`request time : ${new Date() - now} && skip (matchTimeLine === null)`);
-            continue;
-        }
-        if(matchTimeLine.hasOwnProperty("status")) {
-            console.log(`request time : ${new Date() - now} && skip (matchTimeLine.hasOwnProperty("status"))`);
             continue;
         }
 
         console.log(`request time : ${new Date() - now}`);
 
         let dbStartTime = Date.now();
-        // insert matchInfo
-        try {
-            await matchCollection.insertOne(matchInfo);
-            await matchTimeLineCollection.insertOne(matchTimeLine);
-        } catch (err) {
-            // send Slack message
-            const slackService = SlackService.getInstance();
-            let matchId = "no matchId";
-            if(matchInfo.hasOwnProperty("metadata") && matchInfo.metadata.hasOwnProperty("matchId")){
-                matchId = matchInfo.metadata.matchId;
-            }
-            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error - matchId : ${matchId} 
-           \n keep going...`);
+        for(let match of matchListInfo){
+            let isExist = await MatchList.exists({matchId: match});
 
-            //finish process
-            continue;
-        } finally {
-            totalSaveCount++;
+            if(isExist) continue;
+
+            let matchList = new MatchList({
+                matchId: match,
+                matchInfoDone: false,
+                matchTimelineDone: false
+            });
+
+            await matchList.save();
         }
         console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }

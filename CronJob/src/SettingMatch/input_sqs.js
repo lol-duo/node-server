@@ -22,7 +22,7 @@ try {
     await client.connect();
 
     const database = client.db("riot");
-    collection = database.collection("userInfo");
+    collection = database.collection("puuidInfo");
 
 } catch (err) {
     // send Slack message
@@ -38,21 +38,36 @@ let awsSQSController = AwsSQSController.getInstance();
 let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCH_SQS_NAME);
 
 // message template
-function setMessage(matchId){
+function setMessage(puuid){
     return {
         value: {
-            matchId: matchId
+            puuid: puuid
         }
     }
 }
 
 // get userInfoList
-let start = Date.now();
-let tierList = ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND","AM", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
+let cursor = null;
+let tierList = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD" , "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"]
 
-while (true){
-    let puuIdList = await collection.find({ "puuId": { $exists: true }}).sort({'puuid': 1}).project({"puuid":1, _id:0}).limit(1000).toArray();
+for(let i = 0; i < tierList.length; i++) {
+    let messageList = [];
+    while(true) {
+        let filter = {};
+        if (cursor !== null) filter = {"puuid": {$gt: cursor}};
+
+        let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(1000).toArray();
+        if (puuIdList.length === 0) break;
+
+        for (let j = 0; j < puuIdList.length; j++) {
+            messageList.push(setMessage(puuIdList[j].puuid));
+        }
+        await awsSQSController.sendSQSMessage(sqsURL, messageList);
+        cursor = puuIdList[puuIdList.length - 1].puuid;
+    }
+    if(tierList[i] === process.env.TIER) break;
 }
+
 
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
