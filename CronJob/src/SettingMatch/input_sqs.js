@@ -52,11 +52,15 @@ let cursor = null;
 let tierList = ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 
 for(let i = 0; i < tierList.length; i++) {
+    console.log(tierList[i] + " start");
+
+    let count = 0;
 
     while(true) {
         let filter = {};
         let messageList = [];
         if (cursor !== null) filter = {"puuid": {$gt: cursor}, "tier": tierList[i]};
+        else filter = {"tier": tierList[i]};
 
         let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(1000).toArray();
         if (puuIdList.length === 0) break;
@@ -64,9 +68,12 @@ for(let i = 0; i < tierList.length; i++) {
         for (let j = 0; j < puuIdList.length; j++) {
             messageList.push(setMessage(puuIdList[j].puuid));
         }
+        count++;
         await awsSQSController.sendSQSMessage(sqsURL, messageList);
         cursor = puuIdList[puuIdList.length - 1].puuid;
     }
+    console.log(tierList[i] + " end " + count + " times");
+    cursor = null;
     if(tierList[i] === process.env.TIER) break;
 }
 
