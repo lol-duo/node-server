@@ -56,7 +56,7 @@ for(let i = 0; i < tierList.length; i++) {
     while(true) {
         let filter = {};
         let messageList = [];
-        if (cursor !== null) filter = {"puuid": {$gt: cursor}};
+        if (cursor !== null) filter = {"puuid": {$gt: cursor}, "tier": tierList[i]};
 
         let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(1000).toArray();
         if (puuIdList.length === 0) break;
