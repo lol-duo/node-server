@@ -50,7 +50,6 @@ try {
 let awsSQSController = AwsSQSController.getInstance();
 let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCH_SQS_NAME);
 let totalSaveCount = 0;
-
 while (true){
     // get SQS message
     let message = await awsSQSController.getSQSMessage(sqsURL, 3600, 20, 1);
@@ -114,6 +113,7 @@ while (true){
         console.log(`request time : ${new Date() - now}`);
 
         let dbStartTime = Date.now();
+
         for(let match of matchListInfo){
             let isExist = await MatchList.exists({matchId: match});
 
@@ -124,8 +124,12 @@ while (true){
                 matchInfoDone: false,
                 matchTimelineDone: false
             });
-
-            await matchList.save();
+            try {
+                await matchList.save();
+                totalSaveCount++;
+            } catch (err) {
+                console.log(match + " save error : " + err);
+            }
         }
         console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
