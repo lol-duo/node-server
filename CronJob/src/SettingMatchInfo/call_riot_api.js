@@ -49,6 +49,7 @@ try {
 let awsSQSController = AwsSQSController.getInstance();
 let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCH_SQS_NAME);
 let totalSaveCount = 0;
+
 while (true){
     // get SQS message
     let message = await awsSQSController.getSQSMessage(sqsURL, 3600, 20, 1);
@@ -113,24 +114,30 @@ while (true){
 
         let dbStartTime = Date.now();
 
-        for(let match of matchListInfo){
-            let isExist = await MatchList.exists({matchId: match});
+        try {
+            for (let match of matchListInfo) {
+                let isExist = await MatchList.exists({matchId: match});
 
-            if(isExist) continue;
+                if (isExist) continue;
 
-            let matchList = new MatchList({
-                matchId: match,
-                matchInfoDone: false,
-                matchTimelineDone: false
-            });
-            try {
-                await matchList.save();
-                totalSaveCount++;
-            } catch (err) {
-                console.log(match + " save error : " + err);
+                let matchList = new MatchList({
+                    matchId: match,
+                    matchInfoDone: false,
+                    matchTimelineDone: false
+                });
+                try {
+                    await matchList.save();
+                    totalSaveCount++;
+                } catch (err) {
+                    console.log(match + " save error : " + err);
+                }
             }
+            console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
+        } catch (err) {
+            console.log(`puuid : ${puuid} error : ${err} matchListInfo : ${matchListInfo}`);
+            let slackService = SlackService.getInstance();
+            await slackService.sendMessage(process.env.Slack_Channel, `SettingUserInfo CronJob is failed\n`);
         }
-        console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
 
     // delete message
