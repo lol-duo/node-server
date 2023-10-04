@@ -113,24 +113,29 @@ while (true){
 
         let dbStartTime = Date.now();
 
-        for(let match of matchListInfo){
-            let isExist = await MatchList.exists({matchId: match});
+        try {
+            for (let match of matchListInfo) {
+                let isExist = await MatchList.exists({matchId: match});
 
-            if(isExist) continue;
+                if (isExist) continue;
 
-            let matchList = new MatchList({
-                matchId: match,
-                matchInfoDone: false,
-                matchTimelineDone: false
-            });
-            try {
-                await matchList.save();
-                totalSaveCount++;
-            } catch (err) {
-                console.log(match + " save error : " + err);
+                let matchList = new MatchList({
+                    matchId: match,
+                    matchInfoDone: false,
+                    matchTimelineDone: false
+                });
+                try {
+                    await matchList.save();
+                    totalSaveCount++;
+                } catch (err) {
+                    console.log(match + " save error : " + err);
+                }
             }
+            console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
+        } catch (err) {
+            console.log(`puuid : ${puuid} && ${matchListInfo}`);
+            console.log(`error : ${err}`);
         }
-        console.log(`db insert time : ${Date.now() - dbStartTime}ms`);
     }
 
     // delete message
