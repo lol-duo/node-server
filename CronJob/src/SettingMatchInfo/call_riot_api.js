@@ -115,6 +115,8 @@ while (true){
         let dbStartTime = Date.now();
 
         try {
+            if(matchListInfo.length === 0) console.log(`puuid : ${puuid} && ${matchListInfo}`);
+            console.log(`puuid : ${puuid}`);
             for (let match of matchListInfo) {
                 let isExist = await MatchList.exists({matchId: match});
 
