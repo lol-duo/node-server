@@ -84,10 +84,6 @@ for(let i = 0; i < time; i++){
 
         // set cursor
         cursor = matchIdList[matchIdList.length - 1]._id;
-
-        // print count
-        count += matchIdList.length;
-        console.log(count);
     }
 }
 
