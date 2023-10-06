@@ -117,14 +117,24 @@ while (true){
 
         let dbStartTime = Date.now();
         // insert matchInfo
+        // start transaction
+        const session = client.startSession();
+        session.startTransaction();
         try {
-            await matchCollection.insertOne(matchInfo);
+            await matchCollection.insertOne(matchInfo, {session: session});
 
             // update matchList
-            let matchInfo = await matchListCollection.findOne({matchId: matchId});
+            let matchInfo = await matchListCollection.findOne({matchId: matchId}, {session: session});
             matchInfo.matchInfoDone = true;
-            await matchInfo.save();
+            await matchListCollection.replaceOne({matchId: matchId}, matchInfo, {session: session});
+
+            await session.commitTransaction();
+            session.endSession();
         } catch (err) {
+
+            await session.abortTransaction();
+            session.endSession();
+
             // send Slack message
             const slackService = SlackService.getInstance();
             let matchId = "no matchId";
