@@ -72,7 +72,7 @@ for(let i = 0; i < time; i++){
         // matchInfoDone false or matchTimelineDone false
         let filter = {matchInfoDone: false};
         if(cursor !== null) filter._id = {$gt: cursor};
-        let matchIdList = await MatchList.find(filter).sort({_id: 1}).limit(bulkSize).toArray();
+        let matchIdList = await MatchList.find(filter).sort({_id: 1}).limit(bulkSize);
         if(matchIdList.length === 0) break;
 
         // send SQS message
