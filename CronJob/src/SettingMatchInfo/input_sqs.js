@@ -63,6 +63,8 @@ let cursor = null;
 let time = Number(process.env.TIME);
 console.log(time + " hour start");
 
+let totalCount = 0;
+
 for(let i = 0; i < time; i++){
 
     // 시간당 처리할 수 있는 양으로 제한
@@ -82,6 +84,7 @@ for(let i = 0; i < time; i++){
         }
         await awsSQSController.sendSQSMessage(sqsURL, messageList);
 
+        totalCount += matchIdList.length;
         // set cursor
         cursor = matchIdList[matchIdList.length - 1]._id;
     }
@@ -90,7 +93,7 @@ for(let i = 0; i < time; i++){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingUserInfo CronJob is finished" + "\n" + totalCount + " matchInfoStart" + "\n" + totalCount / 5 / 60 / 60 + " hour expected");
 }
 
 process.exit(0);
