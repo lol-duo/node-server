@@ -7,6 +7,7 @@ import {MongoClient} from "mongodb";
 
 // set dotenv if MODE is dev
 if(process.env.MODE === "dev"){
+    console.log("dev");
     dotenv.config({path: process.env.npm_config_local_prefix + "/secret/secret.env"});
 }
 
@@ -23,7 +24,7 @@ let client = null;
 // set mongoose
 try {
     console.log(process.env.mongoDB_URI);
-    client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
+    client = new MongoClient(process.env.mongoDB_URI);
     await client.connect();
 
     const database = client.db("riot");
@@ -40,7 +41,7 @@ try {
 } catch (err) {
     // send Slack message
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err}`);
+    await slackService.sendMessage(process.env.Slack_Channel, `error: ${err}`);
 
     //finish process
     process.exit(1);
@@ -120,15 +121,16 @@ while (true){
         let dbStartTime = Date.now();
         // insert matchInfo
         // start transaction
+
         const session = client.startSession();
         session.startTransaction();
         try {
             await matchCollection.insertOne(matchInfo, {session: session});
 
             // update matchList
-            let matchInfo = await matchListCollection.findOne({matchId: matchId}, {session: session});
-            matchInfo.matchInfoDone = true;
-            await matchListCollection.replaceOne({matchId: matchId}, matchInfo, {session: session});
+            let matchListInfo = await matchListCollection.findOne({matchId: matchId}, {session: session});
+            matchListInfo.matchInfoDone = true;
+            await matchListCollection.replaceOne({matchId: matchId}, matchListInfo, {session: session});
 
             await session.commitTransaction();
             session.endSession();
@@ -139,13 +141,7 @@ while (true){
 
             // send Slack message
             const slackService = SlackService.getInstance();
-            let matchId = "no matchId";
-            if(matchInfo.hasOwnProperty("metadata") && matchInfo.metadata.hasOwnProperty("matchId")){
-                matchId = matchInfo.metadata.matchId;
-            }
-            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error - matchId : ${matchId} 
-           \n keep going...`);
-
+            await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err}`);
             //finish process
             continue;
         } finally {
