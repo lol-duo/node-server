@@ -2,6 +2,7 @@ import SlackService from "../Slack/SlackService.js";
 import dotenv from "dotenv";
 import AwsSQSController from "../SQS/AwsSQSController.js";
 import MatchList from "../Model/MatchList.js";
+import mongoose from "mongoose";
 
 // set dotenv if MODE is dev
 if(process.env.MODE === "dev"){
@@ -59,8 +60,10 @@ function setMessage(matchId, matchInfoDone, matchTimelineDone){
 
 // get matchIdList
 let cursor = null;
+let time = Number(process.env.TIME);
+console.log(time + " hour start");
 
-for(let i = 0; i < process.env.TIME; i++){
+for(let i = 0; i < time; i++){
 
     // 시간당 처리할 수 있는 양으로 제한
     let bulkSize = 1000;
