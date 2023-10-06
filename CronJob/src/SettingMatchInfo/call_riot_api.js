@@ -13,7 +13,7 @@ if(process.env.MODE === "dev"){
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
     const slackService = SlackService.getInstance();
-    await slackService.sendMessage(process.env.Slack_Channel, "Add Match CronJob is running");
+    await slackService.sendMessage(process.env.Slack_Channel, "SettingMatchInfo call api CronJob is running");
 }
 
 let matchCollection = null;
