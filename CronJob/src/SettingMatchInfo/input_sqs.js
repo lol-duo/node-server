@@ -1,7 +1,7 @@
 import SlackService from "../Slack/SlackService.js";
 import dotenv from "dotenv";
 import AwsSQSController from "../SQS/AwsSQSController.js";
-import {MongoClient} from "mongodb";
+import MatchList from "../Model/MatchList.js";
 
 // set dotenv if MODE is dev
 if(process.env.MODE === "dev"){
@@ -14,17 +14,25 @@ if(process.env.MODE === "prod"){
     await slackService.sendMessage(process.env.Slack_Channel, "SetPuuId CronJob is running");
 }
 
-let collection;
-
 // set mongoose
 try {
     console.log(process.env.mongoDB_URI);
-    const client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
-    await client.connect();
+    await mongoose.connect(process.env.mongoDB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: "riot"
+    })
+        .then(() => console.log("mongoDB connected"))
+        .catch(
+            async (err) => {
+                // send Slack message
+                const slackService = SlackService.getInstance();
+                await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err}`);
 
-    const database = client.db("riot");
-    collection = database.collection("puuidInfo");
-
+                //finish process
+                process.exit(1);
+            }
+        );
 } catch (err) {
     // send Slack message
     const slackService = SlackService.getInstance();
@@ -36,47 +44,49 @@ try {
 
 // get SQS URL
 let awsSQSController = AwsSQSController.getInstance();
-let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCH_SQS_NAME);
+let sqsURL = await awsSQSController.get_SQS_URL(process.env.MATCHINFO_SQS_NAME);
 
 // message template
-function setMessage(puuid){
+function setMessage(matchId, matchInfoDone, matchTimelineDone){
     return {
         value: {
-            puuid: puuid
+            matchId: matchId,
+            matchInfoDone: matchInfoDone,
+            matchTimelineDone: matchTimelineDone
         }
     }
 }
 
-// get userInfoList
+// get matchIdList
 let cursor = null;
-let tierList = ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
 
-for(let i = 0; i < tierList.length; i++) {
-    console.log(tierList[i] + " start");
+for(let i = 0; i < process.env.TIME; i++){
 
-    let count = 0;
+    // 시간당 처리할 수 있는 양으로 제한
+    let bulkSize = 1000;
+    let count = 5*60*60 / bulkSize;
+    for(let j = 0; j < count; j++){
+        // matchInfoDone false or matchTimelineDone false
+        let filter = {matchInfoDone: false};
+        if(cursor !== null) filter._id = {$gt: cursor};
+        let matchIdList = await MatchList.find(filter).sort({_id: 1}).limit(bulkSize).toArray();
+        if(matchIdList.length === 0) break;
 
-    while(true) {
-        let filter = {};
+        // send SQS message
         let messageList = [];
-        if (cursor !== null) filter = {"puuid": {$gt: cursor}, "tier": tierList[i]};
-        else filter = {"tier": tierList[i]};
-
-        let puuIdList = await collection.find(filter).sort({puuid: 1}).limit(1000).toArray();
-        if (puuIdList.length === 0) break;
-
-        for (let j = 0; j < puuIdList.length; j++) {
-            messageList.push(setMessage(puuIdList[j].puuid));
+        for(let i = 0; i < matchIdList.length; i++){
+            messageList.push(setMessage(matchIdList[i].matchId, matchIdList[i].matchInfoDone, matchIdList[i].matchTimelineDone));
         }
-        count++;
         await awsSQSController.sendSQSMessage(sqsURL, messageList);
-        cursor = puuIdList[puuIdList.length - 1].puuid;
-    }
-    console.log(tierList[i] + " end " + count + " times");
-    cursor = null;
-    if(tierList[i] === process.env.TIER) break;
-}
 
+        // set cursor
+        cursor = matchIdList[matchIdList.length - 1]._id;
+
+        // print count
+        count += matchIdList.length;
+        console.log(count);
+    }
+}
 
 // send Slack message if MODE is prod
 if(process.env.MODE === "prod"){
