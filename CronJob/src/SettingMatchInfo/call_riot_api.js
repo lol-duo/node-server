@@ -17,6 +17,7 @@ if(process.env.MODE === "prod"){
 }
 
 let matchCollection = null;
+let matchListCollection = null;
 
 // set mongoose
 try {
@@ -25,6 +26,7 @@ try {
 
     const database = client.db("riot");
     matchCollection = database.collection("matchInfo");
+    matchListCollection = database.collection("matchList");
     if(matchCollection === null) {
         const slackService = SlackService.getInstance();
         await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: matchCollection is null`);
@@ -117,6 +119,11 @@ while (true){
         // insert matchInfo
         try {
             await matchCollection.insertOne(matchInfo);
+
+            // update matchList
+            let matchInfo = await matchListCollection.findOne({matchId: matchId});
+            matchInfo.matchInfoDone = true;
+            await matchInfo.save();
         } catch (err) {
             // send Slack message
             const slackService = SlackService.getInstance();
