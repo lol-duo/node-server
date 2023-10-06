@@ -18,10 +18,12 @@ if(process.env.MODE === "prod"){
 
 let matchCollection = null;
 let matchListCollection = null;
+let client = null;
 
 // set mongoose
 try {
-    const client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
+    console.log(process.env.mongoDB_URI);
+    client = new MongoClient(process.env.mongoDB_URI, { useUnifiedTopology: true });
     await client.connect();
 
     const database = client.db("riot");
