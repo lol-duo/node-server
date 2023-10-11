@@ -142,7 +142,7 @@ while (true){
             // send Slack message
             const slackService = SlackService.getInstance();
             await slackService.sendMessage(process.env.Slack_Channel, `mongoose error: ${err}`);
-            //finish process
+
             continue;
         } finally {
             totalSaveCount++;

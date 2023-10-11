@@ -22,6 +22,8 @@
     "prodSetMatchInfo_CallApi": "MODE=prod node src/SettingMatchInfo/call_riot_api.js",
     "devGetServerInfo": "MODE=dev nodemon src/ServerInfo/getServerInfo.js",
     "prodGetServerInfo": "MODE=prod node src/ServerInfo/getServerInfo.js",
+    "devSetCombi" : "MODE=dev nodemon src/SettingCombi/create_combi_info.js",
+    "prodSetCombi" : "MODE=prod node src/SettingCombi/create_combi_info.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tt" : "node src/Model/test.js"
   },
