@@ -9,4 +9,5 @@ export class AppController {
   async getSoloInfo(@Query("championId") championId: string, @Query("position") position: string): Promise<any> {
     return await this.appService.getSoloInfo(championId, position);
   }
+
 }
