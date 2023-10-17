@@ -60,6 +60,7 @@ export class AppService {
                   championName: {$first: '$championName'},
                   championId: {$first: '$championId'},
                   mainPerk: {$first: '$mainPerk'},
+                  lane: {$first: '$lane'},
               },
           },
           {
@@ -68,7 +69,8 @@ export class AppService {
                     championName: 1,
                     championId: 1,
                     mainPerk: 1,
-                  totalGames: 1,
+                    totalGames: 1,
+                    lane: 1,
               },
           },
           {
