@@ -97,7 +97,7 @@ export class AppService {
                 championName: item.championName,
                 championImgUrl: `https://dm4vqiy2mlodi.cloudfront.net/mainPage/champion/${item.championName}.svg`,
                 mainRuneImgUrl: `https://dm4vqiy2mlodi.cloudfront.net/mainPage/mainRune/${item.mainPerk}.svg`,
-                positionImgUrl: `https://dm4vqiy2mlodi.cloudfront.net/mainPage/position/${position}.svg`,
+                positionImgUrl: `https://dm4vqiy2mlodi.cloudfront.net/mainPage/position/${item.lane}.svg`,
                 winRate: (item.winRate * 100).toFixed(2) + "%",
                 rankNumber: now++,
             };
