@@ -12,6 +12,9 @@ RUN npm install
 # Copy the rest of the application files to the container
 COPY ./dist ./dist
 
+# Copy the config files to the container
+COPY ./tsconfig.json ./tsconfig.json
+
 # Expose port 3000
 EXPOSE 3000
 
