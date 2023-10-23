@@ -8,7 +8,7 @@ let client = null;
 // set mongoose
 try {
     console.log(process.env.mongoDB_URI);
-    client = new MongoClient("mongodb://100.108.189.101:27017/?directConnection=true&serverSelectionTimeoutMS=2000");
+    client = new MongoClient(process.env.mongoDB_URI);
     // @ts-ignore
     client.connect();
 
