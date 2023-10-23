@@ -10,4 +10,9 @@ export class AppController {
     return await this.appService.getSoloInfo(championId, position);
   }
 
+  @Get("/duoInfo")
+  async getDuoInfo(@Query("championId") championId: string, @Query("position") position: string, @Query("championId2") championId2: string, @Query("position2") position2: string): Promise<any> {
+    return await this.appService.getDuoInfo(championId, position, championId2, position2);
+  }
+
 }
